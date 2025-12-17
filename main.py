@@ -3,6 +3,10 @@ from database import engine, Base
 from routes import auth_routes
 from routes import user_routes
 from routes import bench_routes
+from routes import tests_routes
+from routes import instruments_routes
+
+
 
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,6 +45,10 @@ app.add_middleware(
 app.include_router(user_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(bench_routes.router)
+app.include_router(tests_routes.router)
+app.include_router(instruments_routes.router)
+
+
 # create tables at startup
 
 
