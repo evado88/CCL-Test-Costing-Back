@@ -2,11 +2,11 @@ User
 
 {
   "type": 1,
-  "fname": "John",
-  "lname": "Doe",
+  "fname": "Super",
+  "lname": "Admin",
   "mobile_code": "+260",
   "mobile": "+260978989259",
-  "position": "Clerk",
+  "position": "-",
   "address": "Libala South",
   "email": "nkoleevans@gmail.com",
   "role": 1,
@@ -16,10 +16,50 @@ User
   "approval_levels": 3
 }
 
-Bench
+Lab 1
+{
+  "user_id": 1,
+  "name": "Haematology",
+  "description": "The lab for haematology"
+}
 
+Lab 2
 {
   "user_id": 1,
   "name": "Chemistry",
-  "description": "The bench for chemistry"
+  "description": "The lab for chemistry"
+}
+
+Test 1
+{
+  "user_id": 1,
+  "name": "CBC",
+  "description": "Complete Blood Count (CBC)"
+}
+
+Test 2
+{
+  "user_id": 1,
+  "name": "Hemogram",
+  "description": "Complete Blood Count (CBC) or Full Blood Count (FBC)"
+}
+
+Instrument 1
+{
+  "user_id": 1,
+  "name": "CELTAK",
+  "cost": 25459.34,
+  "amortization": 7,
+  "maintenance_cost":1560.00,
+  "description": ""
+}
+
+Instrument 2
+{
+  "user_id": 1,
+  "name": "Sysmex XN1000",
+  "cost": 35459.34,
+  "amortization": 7,
+  "maintenance_cost":1815.00,
+  "description": ""
 }

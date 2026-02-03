@@ -9,8 +9,8 @@ from models.user_model import User
 
 
 # ---------- SQLAlchemy Models ----------
-class BenchDB(Base):
-    __tablename__ = "benches"
+class LabDB(Base):
+    __tablename__ = "labs"
 
     # id
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -28,10 +28,10 @@ class BenchDB(Base):
     updated_by = Column(String, nullable=True)
 
     # relationships
-    user = relationship("UserDB", back_populates="benches", lazy="selectin")
+    user = relationship("UserDB", back_populates="labs", lazy="selectin")
 
 # ---------- Pydantic Schemas ----------
-class Bench(BaseModel):
+class Lab(BaseModel):
     # id
     id: Optional[int] = None
     # user
@@ -53,5 +53,5 @@ class Bench(BaseModel):
     class Config:
         orm_mode = True
 
-class BenchWithDetail(Bench):
+class LabWithDetail(Lab):
     user: User

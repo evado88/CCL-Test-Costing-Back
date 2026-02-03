@@ -56,7 +56,9 @@ class UserDB(Base):
     updated_by = Column(String, nullable=True)
 
     # relationships
-    benches = relationship("BenchDB", back_populates="user")
+    labs = relationship("LabDB", back_populates="user")
+    tests = relationship("TestDB", back_populates="user")
+    instruments = relationship("InstrumentDB", back_populates="user")
 # ---------- Pydantic Schemas ----------
 class User(BaseModel):
     # id
