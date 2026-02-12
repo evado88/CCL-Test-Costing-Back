@@ -39,9 +39,9 @@ class TestInstrumentDB(Base):
     updated_by = Column(String, nullable=True)
 
     # relationships
-    user = relationship("UserDB", back_populates="test_instrument", lazy="selectin")
-    test = relationship("TestDB", back_populates="test_instrument", lazy="selectin")
-    instrument = relationship("InstrumentDB", back_populates="test_instrument", lazy="selectin")
+    #user = relationship("UserDB", back_populates="test_instrument", lazy="selectin")
+    #test = relationship("TestDB", back_populates="test_instrument", lazy="selectin")
+    #instrument = relationship("InstrumentDB", back_populates="test_instrument", lazy="selectin")
 # ---------- Pydantic Schemas ----------
 class TestInstrument(BaseModel):
     # id

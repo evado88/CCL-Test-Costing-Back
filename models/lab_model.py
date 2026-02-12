@@ -29,7 +29,7 @@ class LabDB(Base):
 
     # relationships
     user = relationship("UserDB", back_populates="labs", lazy="selectin")
-
+    tests = relationship("TestDB", back_populates="lab", lazy="selectin")
 # ---------- Pydantic Schemas ----------
 class Lab(BaseModel):
     # id

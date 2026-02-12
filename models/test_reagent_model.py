@@ -39,9 +39,9 @@ class TestReagentDB(Base):
     updated_by = Column(String, nullable=True)
 
     # relationships
-    user = relationship("UserDB", back_populates="test_reagent", lazy="selectin")
-    test = relationship("TestDB", back_populates="test_reagent", lazy="selectin")
-    reagent = relationship("ReagentDB", back_populates="test_reagent", lazy="selectin")
+    #user = relationship("UserDB", back_populates="test_reagent", lazy="selectin")
+    #test = relationship("TestDB", back_populates="test_reagent", lazy="selectin")
+    #reagent = relationship("ReagentDB", back_populates="test_reagent", lazy="selectin")
 # ---------- Pydantic Schemas ----------
 class TestReagent(BaseModel):
     # id

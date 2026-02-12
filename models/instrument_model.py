@@ -35,7 +35,7 @@ class InstrumentDB(Base):
 
     # relationships
     user = relationship("UserDB", back_populates="instruments", lazy="selectin")
-    test_instrument = relationship("TestInstrumentDB", back_populates="instrument", lazy="selectin")
+    #test_instrument = relationship("TestInstrumentDB", back_populates="instrument", lazy="selectin")
 # ---------- Pydantic Schemas ----------
 class Instrument(BaseModel):
     # id

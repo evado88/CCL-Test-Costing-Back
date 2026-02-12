@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 from typing import List
 
 from database import get_db
 from models.instrument_model import InstrumentDB
 from models.instrument_model import InstrumentDB
+from models.lab_model import LabDB
 from models.param_models import ParamTestDetail
 from models.reagent_model import ReagentDB
 from models.test_model import Test, TestDB, TestWithDetail
@@ -81,14 +83,19 @@ async def get_test_detail(test_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(ReagentDB))
     reagents = result.scalars().all()
 
+    result = await db.execute(select(LabDB))
+    labs = result.scalars().all()
+
     result = await db.execute(select(TestDB).filter(TestDB.id == test_id))
     test = result.scalars().first()
     if not test:
         raise HTTPException(
             status_code=404, detail=f"Unable to find test with id '{test_id}'"
         )
-        
-    return {"reagents": reagents, "instruments": instruments, "test": test}
+
+    return ParamTestDetail(
+        labs=labs, reagents=reagents, instruments=instruments, test=test
+    )
 
 
 @router.get("/param", response_model=ParamTestDetail)
@@ -99,7 +106,12 @@ async def get_test_pram(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(ReagentDB))
     reagents = result.scalars().all()
 
-    return {"reagents": reagents, "instruments": instruments, "test": None}
+    result = await db.execute(select(LabDB))
+    labs = result.scalars().all()
+
+    return ParamTestDetail(
+        labs=labs, reagents=reagents, instruments=instruments, test=None
+    )
 
 
 @router.put("/update/{test_id}", response_model=TestWithDetail)

@@ -5,6 +5,7 @@ from typing import Any, Optional
 from database import Base
 from datetime import datetime
 
+from models.lab_model import Lab
 from models.user_model import User
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -17,7 +18,11 @@ class TestDB(Base):
 
     # user
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-
+    
+    # lab
+    lab_id = Column(Integer, ForeignKey("labs.id"), nullable=False)
+    
+    # details
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     
@@ -52,15 +57,21 @@ class TestDB(Base):
 
     # relationships
     user = relationship("UserDB", back_populates="tests", lazy="selectin")
-    test_instrument = relationship("TestInstrumentDB", back_populates="test", lazy="selectin")
-    test_reagent = relationship("TestReagentDB", back_populates="test", lazy="selectin")
+    lab = relationship("LabDB", back_populates="tests", lazy="selectin")
+    #test_instrument = relationship("TestInstrumentDB", back_populates="test", lazy="selectin")
+    #test_reagent = relationship("TestReagentDB", back_populates="test", lazy="selectin")
 # ---------- Pydantic Schemas ----------
 class Test(BaseModel):
     # id
     id: Optional[int] = None
+    
     # user
     user_id: int
-
+    
+    # lab
+    lab_id: int
+    
+    # details
     name: str = Field(
         ...,
         min_length=2,
@@ -152,3 +163,4 @@ class Test(BaseModel):
 
 class TestWithDetail(Test):
     user: User
+    lab: Lab

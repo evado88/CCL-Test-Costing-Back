@@ -38,7 +38,7 @@ class ReagentDB(Base):
 
     # relationships
     user = relationship("UserDB", back_populates="reagents", lazy="selectin")
-    test_reagent = relationship("TestReagentDB", back_populates="reagent", lazy="selectin")
+    #test_reagent = relationship("TestReagentDB", back_populates="reagent", lazy="selectin")
 # ---------- Pydantic Schemas ----------
 class Reagent(BaseModel):
     # id
