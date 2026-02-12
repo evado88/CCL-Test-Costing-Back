@@ -5,7 +5,9 @@ from routes import user_routes
 from routes import lab_routes
 from routes import test_routes
 from routes import instrument_routes
-
+from routes import reagent_routes
+from routes import test_instrument_routes
+from routes import test_reagent_routes  
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -45,6 +47,7 @@ app.include_router(auth_routes.router)
 app.include_router(lab_routes.router)
 app.include_router(test_routes.router)
 app.include_router(instrument_routes.router)
+app.include_router(reagent_routes.router)
 # create tables at startup
 
 

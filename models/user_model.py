@@ -1,3 +1,4 @@
+from modulefinder import test
 from sqlalchemy import Column, Integer, String, Float, Date, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -59,6 +60,9 @@ class UserDB(Base):
     labs = relationship("LabDB", back_populates="user")
     tests = relationship("TestDB", back_populates="user")
     instruments = relationship("InstrumentDB", back_populates="user")
+    reagents = relationship("ReagentDB", back_populates="user")
+    test_instrument = relationship("TestInstrumentDB", back_populates="user")
+    test_reagent = relationship("TestReagentDB", back_populates="user")
 # ---------- Pydantic Schemas ----------
 class User(BaseModel):
     # id

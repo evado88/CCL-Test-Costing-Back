@@ -26,10 +26,13 @@ async def create(instrument: Instrument, db: AsyncSession = Depends(get_db)):
         user_id=instrument.user_id,
         # details
         name=instrument.name,
+        description=instrument.description,
+        #costs
         cost=instrument.cost,
         amortization=instrument.amortization,
+        annual_cost=instrument.annual_cost,
         maintenance_cost=instrument.maintenance_cost,
-        description=instrument.description,
+        total_cost = instrument.total_cost,
         # service
         created_by=user.email,
     )
