@@ -26,13 +26,13 @@ production-readiness.
 
 ### UNIX (macOS / Linux)
 
-    python3 -m venv venv
-    source venv/bin/activate
+    python3 -m venv menv
+    source menv/bin/activate
 
 ### Windows (PowerShell)
 
-    python -m venv venv
-    .env\Scripts\Activate
+    python -m venv menv
+    .\menv\Scripts\Activate
 
 ## 2. Install Dependencies
 
