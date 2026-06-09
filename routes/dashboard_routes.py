@@ -71,7 +71,7 @@ async def updateReagentList(test: TestDB, db: AsyncSession):
                     item["gru_consumed"] = consumed
                     item["cost_per_test"] = costPerTest
                     item["total_cost"] = total_cost
-
+                    
                     break
 
     return test.reagent_list
@@ -99,17 +99,24 @@ async def get_test_dashboard(db: AsyncSession = Depends(get_db)):
     for test in tests:
         reagentList = await updateReagentList(test, db)
         instrumentList = await updateInstrumentList(test, db)
-
+        
+        totalReagentCost = sum(item["cost_per_test"] for item in reagentList)
+        totalInstrumentCost = sum(item["annual_cost"] for item in instrumentList)
+        actualInstrumentCost = totalInstrumentCost / test.annual_total
+        
         testCost = ParamTestCost(
             name=test.name,
             lab=test.lab.name,
-            total_cost=20000,
+            annual_total=test.annual_total,
+            total_labor_result_year=test.total_labor_result_year,
+            total_labor_analysis_year=test.total_labor_analysis_year,
+            total_cost=totalReagentCost + actualInstrumentCost,
             components=[
                 ParamTestComponentDetail(
-                    component="reagent", cost=3000, items=reagentList
+                    component="reagent", cost=totalReagentCost, items=reagentList
                 ),
                 ParamTestComponentDetail(
-                    component="instrument", cost=4000, items=instrumentList
+                    component="instrument", cost=actualInstrumentCost, items=instrumentList
                 ),
             ],
         )

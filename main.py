@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from database import engine, Base
-from routes import auth_routes
+from routes import attachment_routes, auth_routes, login_routes, month_routes, test_price_volume_routes
 from routes import user_routes
 from routes import lab_routes
 from routes import test_routes
 from routes import instrument_routes
 from routes import reagent_routes
 from routes import dashboard_routes
+from routes import data_routes
 
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -42,13 +43,20 @@ app.add_middleware(
     )
 
 # include routers
-app.include_router(user_routes.router)
-app.include_router(auth_routes.router)
-app.include_router(lab_routes.router)
-app.include_router(test_routes.router)
-app.include_router(instrument_routes.router)
-app.include_router(reagent_routes.router)
-app.include_router(dashboard_routes.router)
+APP_ROUTE = "/ccl"
+
+app.include_router(user_routes.router, prefix=APP_ROUTE)
+app.include_router(auth_routes.router, prefix=APP_ROUTE)
+app.include_router(lab_routes.router, prefix=APP_ROUTE)
+app.include_router(test_routes.router, prefix=APP_ROUTE)
+app.include_router(instrument_routes.router, prefix=APP_ROUTE)
+app.include_router(reagent_routes.router, prefix=APP_ROUTE)
+app.include_router(dashboard_routes.router, prefix=APP_ROUTE)
+app.include_router(data_routes.router, prefix=APP_ROUTE)
+app.include_router(attachment_routes.router, prefix=APP_ROUTE)
+app.include_router(test_price_volume_routes.router, prefix=APP_ROUTE)
+app.include_router(month_routes.router, prefix=APP_ROUTE)
+app.include_router(login_routes.router, prefix=APP_ROUTE)
 # create tables at startup
 
 

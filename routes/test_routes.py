@@ -8,10 +8,11 @@ from database import get_db
 from models.instrument_model import InstrumentDB
 from models.instrument_model import InstrumentDB
 from models.lab_model import LabDB
-from models.param_models import ParamTestDetail
+from models.param_models import ParamDataImport, ParamTestDetail
 from models.reagent_model import ReagentDB
 from models.test_model import Test, TestDB, TestWithDetail
 from models.user_model import UserDB
+from helpers import assist
 
 router = APIRouter(prefix="/tests", tags=["Tests"])
 
@@ -29,6 +30,7 @@ async def create(test: Test, db: AsyncSession = Depends(get_db)):
     db_user = TestDB(
         # user
         user_id=test.user_id,
+        lab_id=test.lab_id,
         # details
         name=test.name,
         description=test.description,
@@ -51,6 +53,22 @@ async def create(test: Test, db: AsyncSession = Depends(get_db)):
         # lists
         reagent_list=test.reagent_list,
         instrument_list=test.instrument_list,
+        # labor per sample
+        avg_hr_wage_analysis=test.avg_hr_wage_analysis,
+        setup_min=test.setup_min,
+        analysis_min=test.analysis_min,
+        result_review_min=test.result_review_min,
+        result_doc_min=test.result_doc_min,
+        retention=test.retention,
+        total_labor_analysis_min=test.total_labor_analysis_min,
+        total_labor_analysis_year=test.total_labor_analysis_year,
+        # labor per result
+        avg_hr_wage_report=test.avg_hr_wage_report,
+        result_entry_min=test.result_entry_min,
+        report_preparation_min=test.report_preparation_min,
+        report_distribution_min=test.report_distribution_min,
+        total_labor_result_min=test.total_labor_result_min,
+        total_labor_result_year=test.total_labor_result_year,
         # service
         created_by=user.email,
     )
@@ -64,9 +82,100 @@ async def create(test: Test, db: AsyncSession = Depends(get_db)):
     return db_user
 
 
+@router.post("/import")
+async def import_customers(
+    dataImport: ParamDataImport,
+    db: AsyncSession = Depends(get_db),
+):
+    # check user exists
+    result = await db.execute(select(UserDB).where(UserDB.id == dataImport.user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(
+            status_code=400,
+            detail=f"The user with id '{dataImport.user_id}' does not exist",
+        )
+
+    # existig tests
+    result = await db.execute(select(TestDB))
+
+    existingItems = result.scalars().all()
+
+    index = 0
+    added = 0
+    updated = 0
+
+    startProcess = assist.get_current_date(False)
+
+    for item in dataImport.items:
+
+        # update count
+        index += 1
+
+        # get name
+        name = item["name"]
+
+        # keep track of items that exist
+        itemRecord = next((c for c in existingItems if c.name == name), None)
+        itemExists = itemRecord is not None
+
+        if itemExists:
+
+            # update available fields
+            for key in item.keys():
+                if not key == "no":
+                    setattr(itemRecord, key, item[key])
+
+            # commit
+            try:
+                await db.commit()
+                await db.refresh(itemRecord)
+
+                updated += 1
+            except Exception as e:
+                await db.rollback()
+                raise HTTPException(
+                    status_code=400, detail=f"Unable to update test: {e}"
+                )
+        else:
+            # add new item
+            data = {key: item[key] for key in item.keys() if not key == "no"}
+
+            db_customer = TestDB(
+                # user
+                user_id=user.id,
+                lab_id=1,
+                # service
+                created_by=user.email,
+                # lists
+                reagent_list=[],
+                instrument_list=[],
+                **data,
+            )
+            db.add(db_customer)
+            added += 1
+
+    # commit changes
+    try:
+        # comit changes
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=f"Unable to import tests: f{e}")
+
+    endProcess = assist.get_current_date(False)
+
+    print(f"Import Test Duration. Start={startProcess}, End={endProcess}")
+
+    return {
+        "succeeded": True,
+        "message": f"Successfully imported {index} test(s). Updated {updated} and added {added} test(s)",
+    }
+
+
 @router.get("/id/{test_id}", response_model=TestWithDetail)
 async def get_item(test_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(TestDB).filter(TestDB.id == test_id))
+    result = await db.execute(select(TestDB).where(TestDB.id == test_id))
     category = result.scalars().first()
     if not category:
         raise HTTPException(
@@ -86,7 +195,7 @@ async def get_test_detail(test_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(LabDB))
     labs = result.scalars().all()
 
-    result = await db.execute(select(TestDB).filter(TestDB.id == test_id))
+    result = await db.execute(select(TestDB).where(TestDB.id == test_id))
     test = result.scalars().first()
     if not test:
         raise HTTPException(

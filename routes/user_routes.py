@@ -5,7 +5,7 @@ from typing import List
 
 from database import get_db
 from helpers import assist
-from models.user_model import User, UserDB, UserSimple, UserWithDetail
+from models.user_model import User, UserDB, UserItem, UserSimple, UserWithDetail
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -91,7 +91,7 @@ async def get_user_id(user_id: int, db: AsyncSession = Depends(get_db)):
         #    joinedload(TransactionDB.source),
         #
         # )
-        .filter(UserDB.id == user_id)
+        .where(UserDB.id == user_id)
     )
     transaction = result.scalars().first()
     if not transaction:
@@ -105,7 +105,7 @@ async def get_user_id(user_id: int, db: AsyncSession = Depends(get_db)):
 async def get_user_email(user_email: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(UserDB)
-        .filter(UserDB.email == user_email)
+        .where(UserDB.email == user_email)
     )
     users = []
 
@@ -118,5 +118,10 @@ async def get_user_email(user_email: str, db: AsyncSession = Depends(get_db)):
 
 @router.get("/list", response_model=List[UserWithDetail])
 async def list_users(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(UserDB))
+    return result.scalars().all()
+
+@router.get("/items", response_model=List[UserItem])
+async def list_items(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(UserDB))
     return result.scalars().all()

@@ -1,16 +1,18 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+
+from sqlalchemy import Column, Float, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Any, Optional
 from database import Base
 from datetime import datetime
 
+from models.month_model import Month
 from models.user_model import UserSimple
 
 
 # ---------- SQLAlchemy Models ----------
-class LabDB(Base):
-    __tablename__ = "labs"
+class TestPriceVolmeDB(Base):
+    __tablename__ = "test_price_volumes"
 
     # id
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -22,6 +24,15 @@ class LabDB(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     
+    # period
+    month_id = Column(Integer,  ForeignKey("list_months.id"), nullable=False)
+    year = Column(Integer, nullable=False)
+    
+    #price volumnes
+    price = Column(Float, nullable=False)
+    volume = Column(Integer, nullable=False)
+
+    
     # service columns
     created_at = Column(DateTime(timezone=True), default=datetime.now, nullable=True)
     created_by = Column(String, nullable=True, default="System")
@@ -29,11 +40,11 @@ class LabDB(Base):
     updated_by = Column(String, nullable=True)
 
     # relationships
-    user = relationship("UserDB", back_populates="labs", lazy="raise")
-    tests = relationship("TestDB", back_populates="lab", lazy="raise")
-    
+    user = relationship("UserDB", back_populates="testpricevolumes", lazy="raise")
+    month = relationship("MonthDB", back_populates="testpricevolumes", lazy="raise")
+   
 # ---------- Pydantic Schemas ----------
-class Lab(BaseModel):
+class TestPriceVolme(BaseModel):
     # id
     id: Optional[int] = None
     
@@ -49,6 +60,32 @@ class Lab(BaseModel):
     )
     description: Optional[str] = None
     
+    # period
+    month_id: int = Field(
+        ...,
+        ge=1,
+        le=12,
+        description="Month must be between 1 and 12",
+    )
+    year: int = Field(
+        ...,
+        ge=2020,
+        le=2036,
+        description="Years must be between 2020 and 2036",
+    )
+    
+    #price volumnes
+    volume: int = Field(
+        ...,
+        ge=0,
+        description="Volume must be greater or equal to zero",
+    )
+    price: float = Field(
+        ...,
+        ge=0,
+        description="Price must be greater or equal to zero",
+    )
+    
     # service columns
     created_at: Optional[datetime] = None
     created_by: Optional[str]
@@ -58,21 +95,7 @@ class Lab(BaseModel):
     class Config:
         orm_mode = True
 
-class LabItem(BaseModel):
-    # id
-    id: Optional[int] = None
-    # user
-    user_id: int
-
-    name: str = Field(
-        ...,
-        min_length=2,
-        max_length=50,
-        description="Name must be between 2 and 50 characters",
-    )
-
-    class Config:
-        orm_mode = True
         
-class LabWithDetail(Lab):
+class TestPriceVolmeWithDetail(TestPriceVolme):
     user: UserSimple
+    month: Month

@@ -2,11 +2,30 @@
 from typing import Any, List, Optional
 from pydantic import BaseModel
 
+from models.attachment_model import Attachment
 from models.instrument_model import Instrument
 from models.lab_model import Lab
 from models.reagent_model import Reagent
 from models.test_model import TestWithDetail
 
+
+
+
+class ParamDataImport(BaseModel):
+    user_id: int
+    items: Optional[list[dict[str, Any]]] = []
+
+    class Config:
+        orm_mode = True
+
+
+class ParamAttachmentDetail(BaseModel):
+    attachment: Attachment
+    items: Optional[list[dict[str, Any]]] = []
+
+    class Config:
+        orm_mode = True
+        
 class ParamTestDetail(BaseModel):
     labs: List[Lab]
     reagents: List[Reagent]
@@ -27,6 +46,9 @@ class ParamTestComponentDetail(BaseModel):
 class ParamTestCost(BaseModel):
     name: str
     lab: str
+    annual_total: int
+    total_labor_analysis_year: float
+    total_labor_result_year: float
     total_cost: float
     components: list[ParamTestComponentDetail]=[]
     

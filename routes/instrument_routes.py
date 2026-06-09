@@ -2,16 +2,25 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
-
+from sqlalchemy.orm import selectinload
 from database import get_db
-from models.instrument_model import Instrument, InstrumentDB, InstrumentWithDetail
+from models.instrument_model import (
+    Instrument,
+    InstrumentDB,
+    InstrumentItem,
+    InstrumentParam,
+    InstrumentWithDetail,
+)
+from models.lab_model import LabDB
+from models.param_models import ParamDataImport
 from models.user_model import UserDB
+from helpers import assist
 
 router = APIRouter(prefix="/instruments", tags=["Instruments"])
 
 
 @router.post("/create", response_model=InstrumentWithDetail)
-async def create(instrument: Instrument, db: AsyncSession = Depends(get_db)):
+async def create_item(instrument: Instrument, db: AsyncSession = Depends(get_db)):
     # check user exists
     result = await db.execute(select(UserDB).where(UserDB.id == instrument.user_id))
     user = result.scalars().first()
@@ -24,15 +33,28 @@ async def create(instrument: Instrument, db: AsyncSession = Depends(get_db)):
     db_user = InstrumentDB(
         # user
         user_id=instrument.user_id,
+        
         # details
         name=instrument.name,
+        serial_no=instrument.serial_no,
         description=instrument.description,
-        #costs
+        
+        # costs
         cost=instrument.cost,
         amortization=instrument.amortization,
         annual_cost=instrument.annual_cost,
         maintenance_cost=instrument.maintenance_cost,
-        total_cost = instrument.total_cost,
+        total_cost=instrument.total_cost,
+        
+        # calibration
+        calibration_cycle =instrument.calibration_cycle,
+        calibration_kit_cost = instrument.calibration_kit_cost,
+        calibration_service_cost = instrument.calibration_service_cost,
+        calibration_annual_cost = instrument.calibration_annual_cost, 
+          
+        # lists
+        lab_list=instrument.lab_list,
+        
         # service
         created_by=user.email,
     )
@@ -47,19 +69,128 @@ async def create(instrument: Instrument, db: AsyncSession = Depends(get_db)):
         )
     return db_user
 
-
-@router.get("/id/{instrument_id}", response_model=InstrumentWithDetail)
-async def get_item(instrument_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(InstrumentDB).filter(InstrumentDB.id == instrument_id)
-    )
-    category = result.scalars().first()
-    if not category:
+@router.post("/import")
+async def import_customers(
+    dataImport: ParamDataImport,
+    db: AsyncSession = Depends(get_db),
+):
+    # check user exists
+    result = await db.execute(select(UserDB).where(UserDB.id == dataImport.user_id))
+    user = result.scalars().first()
+    if not user:
         raise HTTPException(
-            status_code=404,
-            detail=f"Unable to find instrument with id '{instrument_id}'",
+            status_code=400,
+            detail=f"The user with id '{dataImport.user_id}' does not exist",
         )
-    return category
+
+    # existig instruments
+    result = await db.execute(select(InstrumentDB))
+
+    existingItems = result.scalars().all()
+
+    index = 0
+    added = 0
+    updated = 0
+
+    startProcess = assist.get_current_date(False)
+
+    for item in dataImport.items:
+
+        # update count
+        index += 1
+
+        # get name
+        name = item["name"]
+
+        # keep track of items that exist
+        itemRecord = next((c for c in existingItems if c.name == name), None)
+        itemExists = itemRecord is not None
+
+        if itemExists:
+
+            # update available fields
+            for key in item.keys():
+                if not key == "no":
+                    setattr(itemRecord, key, item[key])
+
+            # commit
+            try:
+                await db.commit()
+                await db.refresh(itemRecord)
+
+                updated += 1
+            except Exception as e:
+                await db.rollback()
+                raise HTTPException(
+                    status_code=400, detail=f"Unable to update instrument: {e}"
+                )
+        else:
+            # add new item
+            data = {key: item[key] for key in item.keys() if not key == "no"}
+            
+            db_customer = LabDB(
+                # user
+                user_id=user.id,
+                # service
+                created_by=user.email,
+                **data
+            )
+            db.add(db_customer)
+            added += 1
+
+    # commit changes
+    try:
+        # comit changes
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=f"Unable to import instruments: f{e}")
+
+    endProcess = assist.get_current_date(False)
+
+    print(f"Import Instrument Duration. Start={startProcess}, End={endProcess}")
+
+    return {
+        "succeeded": True,
+        "message": f"Successfully imported {index} instrument(s). Updated {updated} and added {added} instrument(s)",
+    }
+    
+@router.get("/id/{instrument_id}", response_model=InstrumentParam)
+async def get_item(instrument_id: int, db: AsyncSession = Depends(get_db)):
+    
+    # only get if not zero
+    instrumentItem = None
+    if instrument_id != 0:
+        result = await db.execute(
+            select(InstrumentDB)
+            .options(
+                selectinload(InstrumentDB.user),
+            )
+            .where(InstrumentDB.id == instrument_id)
+        )
+
+        instrumentItem = result.scalars().first()
+        if not instrumentItem:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Unable to find instrument with id '{instrument_id}'",
+            )
+            
+    # get labs
+    result = await db.execute(
+        select(LabDB)
+        .options(
+            selectinload(LabDB.user),
+        )
+        .order_by(LabDB.name)
+    )
+    labList = result.scalars().all()
+    
+    # return param
+    param = InstrumentParam(instrument=instrumentItem, labs=labList)
+    
+    return param
+
 
 
 @router.put("/update/{instrument_id}", response_model=InstrumentWithDetail)
@@ -69,8 +200,13 @@ async def update_item(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(InstrumentDB).where(InstrumentDB.id == instrument_id)
+        select(InstrumentDB)
+        .options(
+            selectinload(InstrumentDB.user),
+        )
+        .where(InstrumentDB.id == instrument_id)
     )
+    
     config = result.scalar_one_or_none()
 
     if not config:
@@ -93,6 +229,25 @@ async def update_item(
 
 
 @router.get("/list", response_model=List[InstrumentWithDetail])
-async def list_items(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(InstrumentDB))
+async def list(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(InstrumentDB)
+        .options(
+            selectinload(InstrumentDB.user),
+        )
+        .order_by(InstrumentDB.name)
+    )
     return result.scalars().all()
+
+
+@router.get("/items", response_model=List[InstrumentItem])
+async def list_items(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(InstrumentDB)
+        .options(
+            selectinload(InstrumentDB.user),
+        )
+        .order_by(InstrumentDB.name)
+    )
+    return result.scalars().all()
+

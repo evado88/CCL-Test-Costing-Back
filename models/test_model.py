@@ -4,10 +4,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Any, Optional
 from database import Base
 from datetime import datetime
+from sqlalchemy.dialects.postgresql import JSONB
 
 from models.lab_model import Lab
 from models.user_model import User
-from sqlalchemy.dialects.postgresql import JSONB
 
 # ---------- SQLAlchemy Models ----------
 class TestDB(Base):
@@ -48,6 +48,25 @@ class TestDB(Base):
     runs_shift_day = Column(Integer, nullable=False)
     runs_annual = Column(Integer, nullable=False)
     runs_average_volume = Column(Float, nullable=False)
+    
+    # labor per sample
+    avg_hr_wage_analysis = Column(Float, nullable=False)
+    setup_min = Column(Float, nullable=False)
+    analysis_min = Column(Float, nullable=False)
+    result_review_min = Column(Float, nullable=False)
+    result_doc_min = Column(Float, nullable=False)
+    retention = Column(Float, nullable=False)
+    total_labor_analysis_min = Column(Float, nullable=False)
+    total_labor_analysis_year = Column(Float, nullable=False)
+    
+    # labor per result
+    avg_hr_wage_report = Column(Float, nullable=False)
+    result_entry_min = Column(Float, nullable=False)
+    report_preparation_min = Column(Float, nullable=False)
+    report_distribution_min = Column(Float, nullable=False)
+    total_labor_result_min = Column(Float, nullable=False)
+    total_labor_result_year = Column(Float, nullable=False)
+    
     
     # service columns
     created_at = Column(DateTime(timezone=True), default=datetime.now, nullable=True)
@@ -149,6 +168,81 @@ class Test(BaseModel):
         ...,
         ge=0,
         description="Average volume of runs must be greater or equal to zero",
+    )
+    
+    # labor per sample
+    avg_hr_wage_analysis: float = Field(
+        ...,
+        ge=0,
+        description="Average hourly wage must be greater or equal to zero",
+    )
+    setup_min: float = Field(
+        ...,
+        ge=0,
+        description="Setup time in minutes must be greater or equal to zero",
+    )
+    analysis_min: float = Field(
+        ...,
+        ge=0,
+        description="Analysis time in minutes must be greater or equal to zero",
+    )
+    result_review_min: float = Field(
+        ...,
+        ge=0,
+        description="Result review time in minutes must be greater or equal to zero",
+    )
+    result_doc_min: float = Field(
+        ...,
+        ge=0,
+        description="Result documentation time in minutes must be greater or equal to zero",
+    )
+    retention: float = Field(
+        ...,
+        ge=0,
+        description="Retention must be greater or equal to zero",
+    )
+    total_labor_analysis_min: float = Field(
+        ...,
+        ge=0,
+        description="Total labor time in minutes must be greater or equal to zero",
+    )
+    total_labor_analysis_year: float = Field(
+        ...,
+        ge=0,
+        description="Total labor time per year must be greater or equal to zero",
+    )
+    
+    # labor per result
+    avg_hr_wage_report: float = Field(
+        ...,
+        ge=0,
+        description="Average hourly wage for reporting must be greater or equal to zero",
+    )
+    result_entry_min: float = Field(
+        ...,
+        ge=0,
+        description="Result entry time in minutes must be greater or equal to zero",
+    )
+    report_preparation_min: float = Field(
+        ...,
+        ge=0,
+        description="Report preparation time in minutes must be greater or equal to zero",
+    )
+    report_distribution_min: float = Field(
+        ...,
+        ge=0,
+        description="Report distribution time in minutes must be greater or equal to zero",
+    )
+    
+    total_labor_result_min: float = Field(
+        ...,
+        ge=0,
+        description="Total labor time per result in minutes must be greater or equal to zero",
+    )
+    total_labor_result_year: float = Field(
+        ...,
+        ge=0,
+        description="Total labor time per result per year must be greater or equal to zero",
     )
 
     # service columns
