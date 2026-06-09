@@ -1,4 +1,6 @@
 /apienv
+/menv
+/venv
 /__pycache__
 /uploads
 __pycache__
